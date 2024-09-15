@@ -2,19 +2,35 @@
 import Redis from "ioredis";
 
 const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
+  host: process.env.REDIS_HOST || "localhost",
+  port: process.env.REDIS_PORT || 6379,
+  retryStrategy(times) {
+    return Math.min(times * 50, 2000); // Retry strategy for connection failures
+  },
 });
 
 export const saveSession = async (clientId, sessionData) => {
-  await redis.set(clientId, JSON.stringify(sessionData), "EX", 3600);
+  try {
+    await redis.set(clientId, JSON.stringify(sessionData), "EX", 3600);
+  } catch (error) {
+    console.error("Error saving session:", error);
+  }
 };
 
 export const getSession = async (clientId) => {
-  const session = await redis.get(clientId);
-  return session ? JSON.parse(session) : null;
+  try {
+    const session = await redis.get(clientId);
+    return session ? JSON.parse(session) : null;
+  } catch (error) {
+    console.error("Error retrieving session:", error);
+    return null;
+  }
 };
 
 export const removeSession = async (clientId) => {
-  await redis.del(clientId);
+  try {
+    await redis.del(clientId);
+  } catch (error) {
+    console.error("Error removing session:", error);
+  }
 };
