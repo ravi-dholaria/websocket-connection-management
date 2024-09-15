@@ -12,7 +12,7 @@ services:
       - redis
     volumes:
       - .:/app
-    command: sh -c "node ./src/app.js & npm run test"
+    command: node ./src/app.js"
 
   redis:
     image: redis:latest
